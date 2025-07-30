@@ -14,7 +14,7 @@ const firebaseConfig = {
   firebase.initializeApp(firebaseConfig);
   const database = firebase.database();
   
-  // Game state - now with separate dealers
+  // Game state - simplified without dealer data
   let gameState = {
     players: {},
     currentRound: 1,
@@ -22,16 +22,7 @@ const firebaseConfig = {
     gamePhase: 'waiting', // waiting, contestant_card, betting, reveal, round_end, game_end
     contestantCard: null,
     bet: null,
-    roundResults: [],
-    // Separate dealers for each player
-    dealer1: {
-      deck: [1,2,3,4,5,6,7,8,9],
-      currentCard: null
-    },
-    dealer2: {
-      deck: [1,2,3,4,5,6,7,8,9],
-      currentCard: null
-    }
+    roundResults: []
   };
   
   let currentPlayer = null;
@@ -66,13 +57,16 @@ const firebaseConfig = {
   
         currentPlayer = playerId;
   
-        // Initialize player data
+        // Initialize player data with dealer deck
         const playerData = {
             name: playerName,
             chips: 10,
             deck: [0,1,2,3,4,5,6,7,8,9,10],
             ready: false,
-            connected: true
+            connected: true,
+            // Each player gets their own dealer deck and current card
+            dealerDeck: [1,2,3,4,5,6,7,8,9],
+            dealerCurrentCard: null
         };
   
         // Add player to game
@@ -123,19 +117,17 @@ const firebaseConfig = {
         updatePlayerDeck('player2Deck', player2.deck, currentPlayer === 'player2');
     }
   
-    // Update dealer deck counts with safety checks
-    if (gameState.dealer1 && gameState.dealer1.deck) {
-        document.getElementById('dealerDeck1Count').textContent = gameState.dealer1.deck.length;
+    // Update dealer deck counts using player data
+    if (player1 && player1.dealerDeck) {
+        document.getElementById('dealerDeck1Count').textContent = player1.dealerDeck.length;
     } else {
-        console.error('dealer1 or dealer1.deck is undefined:', gameState.dealer1);
-        document.getElementById('dealerDeck1Count').textContent = '?';
+        document.getElementById('dealerDeck1Count').textContent = '9';
     }
     
-    if (gameState.dealer2 && gameState.dealer2.deck) {
-        document.getElementById('dealerDeck2Count').textContent = gameState.dealer2.deck.length;
+    if (player2 && player2.dealerDeck) {
+        document.getElementById('dealerDeck2Count').textContent = player2.dealerDeck.length;
     } else {
-        console.error('dealer2 or dealer2.deck is undefined:', gameState.dealer2);
-        document.getElementById('dealerDeck2Count').textContent = '?';
+        document.getElementById('dealerDeck2Count').textContent = '9';
     }
   
     // Update game status
@@ -165,9 +157,9 @@ const firebaseConfig = {
     const contestantName = players[`player${gameState.currentcontestant}`]?.name || `Player ${gameState.currentcontestant}`;
     const bettorName = players[`player${gameState.currentcontestant === 1 ? 2 : 1}`]?.name || `Player ${gameState.currentcontestant === 1 ? 2 : 1}`;
   
-    // Get current dealer's card
-    const currentDealer = gameState.currentcontestant === 1 ? gameState.dealer1 : gameState.dealer2;
-    const dealerCard = currentDealer.currentCard;
+    // Get current dealer's card from the contestant player's data
+    const contestantPlayer = players[`player${gameState.currentcontestant}`];
+    const dealerCard = contestantPlayer?.dealerCurrentCard;
   
     switch (gameState.gamePhase) {
         case 'waiting':
@@ -200,7 +192,7 @@ const firebaseConfig = {
     if (playerCount === 2 && gameState.gamePhase === 'waiting') {
         // Start the game by immediately dealing dealer card and moving to contestant phase
         setTimeout(() => {
-            startNewRound();
+            startNewRound(players);
         }, 1000);
     }
   
@@ -229,37 +221,38 @@ const firebaseConfig = {
     }
   
     // Update card slots
-    updateCardSlots();
+    updateCardSlots(players);
   }
   
-  function startNewRound() {
-    // Get the appropriate dealer for this contestant
-    const currentDealer = gameState.currentcontestant === 1 ? gameState.dealer1 : gameState.dealer2;
-    
-    console.log(`startNewRound called - currentCard: ${currentDealer.currentCard}, phase: ${gameState.gamePhase}`);
+  function startNewRound(players) {
+    // Get the contestant player data
+    const contestantPlayer = players[`player${gameState.currentcontestant}`];
     
     // PREVENT MULTIPLE EXECUTIONS: If dealer already has a card for this round, don't run again
-    if (currentDealer.currentCard != null) { // Using != instead of !== to catch both null and undefined
+    if (contestantPlayer.dealerCurrentCard != null) {
         console.log(`Round ${gameState.currentRound}: Dealer already has a card, skipping startNewRound`);
         return;
     }
     
-    if (currentDealer.deck.length === 0) {
+    if (!contestantPlayer.dealerDeck || contestantPlayer.dealerDeck.length === 0) {
         console.error('Dealer deck is empty!');
         return;
     }
     
-    // Choose dealer card from the appropriate dealer's deck
-    const randomIndex = Math.floor(Math.random() * currentDealer.deck.length);
-    const dealerCard = currentDealer.deck[randomIndex];
+    // Choose dealer card from the contestant's dealer deck
+    const randomIndex = Math.floor(Math.random() * contestantPlayer.dealerDeck.length);
+    const dealerCard = contestantPlayer.dealerDeck[randomIndex];
     
-    console.log(`Round ${gameState.currentRound}: Dealer ${gameState.currentcontestant} playing card ${dealerCard} from deck of ${currentDealer.deck.length} cards`);
+    console.log(`Round ${gameState.currentRound}: Dealer for player ${gameState.currentcontestant} playing card ${dealerCard} from deck of ${contestantPlayer.dealerDeck.length} cards`);
     
-    // Remove card from the dealer's deck and set as current card
-    currentDealer.deck.splice(randomIndex, 1);
-    currentDealer.currentCard = dealerCard;
+    // Remove card from dealer deck and set as current card
+    contestantPlayer.dealerDeck.splice(randomIndex, 1);
+    contestantPlayer.dealerCurrentCard = dealerCard;
     
-    console.log(`Dealer ${gameState.currentcontestant} deck after removal:`, [...currentDealer.deck]);
+    console.log(`Player ${gameState.currentcontestant} dealer deck after removal:`, [...contestantPlayer.dealerDeck]);
+  
+    // Update player data in Firebase
+    database.ref(`games/${gameId}/players/player${gameState.currentcontestant}`).set(contestantPlayer);
   
     // Move directly to contestant card phase
     gameState.gamePhase = 'contestant_card';
@@ -325,16 +318,16 @@ const firebaseConfig = {
     });
   }
   
-  function updateCardSlots() {
+  function updateCardSlots(players) {
     const dealerSlot = document.getElementById('dealerCardSlot');
     const contestantSlot = document.getElementById('contestantCardSlot');
   
-    // Get current dealer's card
-    const currentDealer = gameState.currentcontestant === 1 ? gameState.dealer1 : gameState.dealer2;
-    const dealerCard = currentDealer.currentCard;
+    // Get current dealer's card from contestant player data
+    const contestantPlayer = players[`player${gameState.currentcontestant}`];
+    const dealerCard = contestantPlayer?.dealerCurrentCard;
   
     // Dealer card is now always face up when placed
-    if (dealerCard != null) { // Fixed: was !== null
+    if (dealerCard != null) {
         dealerSlot.innerHTML = `<div class="card">${dealerCard}</div><div class="card-slot-label">Dealer's Card</div>`;
     } else {
         dealerSlot.innerHTML = `<div class="card-slot-label">Dealer's Card</div>`;
@@ -343,12 +336,12 @@ const firebaseConfig = {
     // Better contestant card handling
     if (gameState.gamePhase === 'reveal' || gameState.gamePhase === 'round_end') {
         // Show contestant card face up
-        if (gameState.contestantCard != null) { // Fixed: was !== null and !== undefined
+        if (gameState.contestantCard != null) {
             contestantSlot.innerHTML = `<div class="card">${gameState.contestantCard}</div><div class="card-slot-label">Contestant's Card</div>`;
         } else {
             contestantSlot.innerHTML = `<div class="card">ERROR</div><div class="card-slot-label">Contestant's Card</div>`;
         }
-    } else if (gameState.gamePhase === 'betting' && gameState.contestantCard != null) { // Fixed: was !== null and !== undefined
+    } else if (gameState.gamePhase === 'betting' && gameState.contestantCard != null) {
         // Show contestant card face down during betting
         contestantSlot.innerHTML = `<div class="card face-down">?</div><div class="card-slot-label">Contestant's Card</div>`;
     } else {
@@ -358,49 +351,47 @@ const firebaseConfig = {
   }
   
   function revealCards() {
-    // Get current dealer's card
-    const currentDealer = gameState.currentcontestant === 1 ? gameState.dealer1 : gameState.dealer2;
-    const dealerCard = currentDealer.currentCard;
-    const contestantCard = gameState.contestantCard;
-    const bet = gameState.bet;
-  
-    // Add validation to prevent undefined card issues
-    if (dealerCard == null || contestantCard == null || !bet) { // Fixed: was === null || === undefined
-        console.error('Card reveal error - missing cards or bet', {dealerCard, contestantCard, bet});
-        return;
-    }
-  
-    let contestantWinnings = 0;
-    let bettorResult = 'tie';
-    let bettorWinnings = 0;
-  
-    // Calculate contestant winnings
-    if (contestantCard > dealerCard) {
-        contestantWinnings = contestantCard - dealerCard;
-    }
-  
-    // Calculate bettor result and winnings - Check tie first
-    if (contestantCard === dealerCard) {
-        bettorResult = 'tie';
-        bettorWinnings = bet.amount; // Return original bet
-    } else if (contestantCard > dealerCard && bet.type === 'big') {
-        bettorResult = 'win';
-        bettorWinnings = bet.amount * 2;
-    } else if (contestantCard < dealerCard && bet.type === 'small') {
-        bettorResult = 'win';
-        bettorWinnings = bet.amount * 2;
-    } else {
-        bettorResult = 'lose';
-        bettorWinnings = 0;
-    }
-  
-    // Update player chips
+    // Get data from players
     database.ref(`games/${gameId}/players`).once('value', (snapshot) => {
         const players = snapshot.val();
-        
+        const contestantPlayer = players[`player${gameState.currentcontestant}`];
+        const dealerCard = contestantPlayer.dealerCurrentCard;
+        const contestantCard = gameState.contestantCard;
+        const bet = gameState.bet;
+  
+        // Add validation to prevent undefined card issues
+        if (dealerCard == null || contestantCard == null || !bet) {
+            console.error('Card reveal error - missing cards or bet', {dealerCard, contestantCard, bet});
+            return;
+        }
+  
+        let contestantWinnings = 0;
+        let bettorResult = 'tie';
+        let bettorWinnings = 0;
+  
+        // Calculate contestant winnings
+        if (contestantCard > dealerCard) {
+            contestantWinnings = contestantCard - dealerCard;
+        }
+  
+        // Calculate bettor result and winnings - Check tie first
+        if (contestantCard === dealerCard) {
+            bettorResult = 'tie';
+            bettorWinnings = bet.amount; // Return original bet
+        } else if (contestantCard > dealerCard && bet.type === 'big') {
+            bettorResult = 'win';
+            bettorWinnings = bet.amount * 2;
+        } else if (contestantCard < dealerCard && bet.type === 'small') {
+            bettorResult = 'win';
+            bettorWinnings = bet.amount * 2;
+        } else {
+            bettorResult = 'lose';
+            bettorWinnings = 0;
+        }
+  
         // Update contestant chips
-        const contestantPlayer = `player${gameState.currentcontestant}`;
-        players[contestantPlayer].chips += contestantWinnings;
+        const contestantPlayerId = `player${gameState.currentcontestant}`;
+        players[contestantPlayerId].chips += contestantWinnings;
   
         // Update bettor chips
         const bettorPlayer = bet.player;
@@ -419,10 +410,10 @@ const firebaseConfig = {
             gameState.gamePhase = 'round_end';
             updateGameState();
         }
-    });
   
-    // Show results to ALL players (moved outside Firebase callback)
-    showRoundResults(dealerCard, contestantCard, bet, contestantWinnings, bettorResult, bettorWinnings);
+        // Show results to ALL players
+        showRoundResults(dealerCard, contestantCard, bet, contestantWinnings, bettorResult, bettorWinnings);
+    });
   }
   
   function showRoundResults(dealerCard, contestantCard, bet, contestantWinnings, bettorResult, bettorWinnings) {
@@ -460,10 +451,10 @@ const firebaseConfig = {
   
     // Show final round results if available
     let finalRoundResults = '';
-    const currentDealer = gameState.currentcontestant === 1 ? gameState.dealer1 : gameState.dealer2;
-    const dealerCard = currentDealer.currentCard;
+    const contestantPlayer = players[`player${gameState.currentcontestant}`];
+    const dealerCard = contestantPlayer?.dealerCurrentCard;
     
-    if (dealerCard !== null && gameState.contestantCard !== null) {
+    if (dealerCard != null && gameState.contestantCard != null) {
         const comparison = gameState.contestantCard > dealerCard ? 'BIGGER' : 
                          gameState.contestantCard < dealerCard ? 'SMALLER' : 'TIED';
         finalRoundResults = `
@@ -501,7 +492,7 @@ const firebaseConfig = {
   function resetGame() {
     // Reset the entire game data
     database.ref(`games/${gameId}`).remove().then(() => {
-        // Reset local state with the NEW structure
+        // Reset local state - simplified without dealer data
         gameState = {
             players: {},
             currentRound: 1,
@@ -509,16 +500,7 @@ const firebaseConfig = {
             gamePhase: 'waiting',
             contestantCard: null,
             bet: null,
-            roundResults: [],
-            // Use the NEW dealer structure
-            dealer1: {
-                deck: [1,2,3,4,5,6,7,8,9],
-                currentCard: null
-            },
-            dealer2: {
-                deck: [1,2,3,4,5,6,7,8,9],
-                currentCard: null
-            }
+            roundResults: []
         };
         currentPlayer = null;
         
@@ -546,8 +528,11 @@ const firebaseConfig = {
             database.ref(`games/${gameId}/players/player2/ready`).set(false);
   
             // Clear current dealer's card for the round that just ended
-            const currentDealer = gameState.currentcontestant === 1 ? gameState.dealer1 : gameState.dealer2;
-            currentDealer.currentCard = null;
+            const contestantPlayer = players[`player${gameState.currentcontestant}`];
+            contestantPlayer.dealerCurrentCard = null;
+            
+            // Update the contestant player with cleared card
+            database.ref(`games/${gameId}/players/player${gameState.currentcontestant}`).set(contestantPlayer);
   
             // Move to next round
             gameState.currentRound++;
@@ -555,8 +540,15 @@ const firebaseConfig = {
             gameState.contestantCard = null;
             gameState.bet = null;
             
+            updateGameState();
+            
             // Start the new round immediately
-            startNewRound();
+            setTimeout(() => {
+                database.ref(`games/${gameId}/players`).once('value', (snapshot) => {
+                    const updatedPlayers = snapshot.val();
+                    startNewRound(updatedPlayers);
+                });
+            }, 500);
         }
     });
   }
