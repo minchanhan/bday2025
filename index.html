@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Corrine's Birthday</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Top Section -->
+        <div class="top-section">
+            <img src="images/title.png" alt="title" height="200" class="titleimg">
+            <div class="boxes-container">
+                <div class="box">
+                  <img src="images/wallgo.webp" alt="wallgo" width="150" height="100">
+                  <h2 class="event-title">Wall Go</h2>
+                </div>
+                <div class="box">
+                  <img src="images/duplicates.jpeg" alt="wallgo" width="150" height="100">
+                  <h2 class="event-title">Duplicates</h2>
+                </div>
+                <div class="box">
+                  <img src="images/bigsmallevent.png" alt="wallgo" width="150" height="100">
+                  <h2>Big or Small</h2>
+                  <!-- Games Completed Button -->
+                  <button class="go-to-bigorsmall-btn" onclick="goToBigOrSmallPage()">
+                    Big or Small - Play
+                  </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Section -->
+        <div class="bottom-section">
+            <div class="piece-counter-container">
+                <div class="counter-display">Pieces: <span id="pieceCount">0</span></div>
+                <div class="pieces-container" id="piecesContainer">
+                    <div class="empty-message"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Secret Button Section -->
+        <div class="button-container">
+          <button class="secret-btn" onclick="removePiece()">Remove Piece</button>
+          <button class="secret-btn" onclick="addPiece()">Add Piece</button>
+      </div>
+    </div>
+
+    <!-- Games Completed Button -->
+    <button class="games-completed-btn" onclick="goToGamesPage()">
+        Games Completed
+    </button>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    
+    <script src="script.js"></script>
+</body>
+</html>

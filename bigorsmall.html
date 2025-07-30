@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Big or Small Game</title>
+    <link rel="stylesheet" href="bigorsmall.css">
+</head>
+<body>
+    <div class="container">
+        <div id="gameSetup" class="game-setup">
+            <h1>Big or Small</h1>
+            <p>Enter your player name to join the game:</p>
+            <input type="text" id="playerName" class="setup-input" placeholder="Your Name" maxlength="20">
+            <br>
+            <button onclick="joinGame()" class="btn success">Join Game</button>
+            <br><br>
+            <button onclick="confirmResetGame()" class="btn danger">Reset Game</button>
+        </div>
+
+        <div id="gameArea" style="display: none;">
+            <div class="game-header">
+                <h1>Big or Small</h1>
+                <div class="game-status" id="gameStatus">
+                    Waiting for players...
+                </div>
+            </div>
+
+            <div class="game-table">
+                <!-- Dealer Section -->
+                <div class="dealer-section">
+                    <div style="font-weight: bold; margin-bottom: 10px;">DEALER</div>
+                    <div class="dealer-decks">
+                        <div class="deck">
+                            <div class="deck-label">Player 1 Deck</div>
+                            <div class="card-stack" id="dealerDeck1">
+                                <span id="dealerDeck1Count">9</span>
+                            </div>
+                        </div>
+                        <div class="deck">
+                            <div class="deck-label">Player 2 Deck</div>
+                            <div class="card-stack" id="dealerDeck2">
+                                <span id="dealerDeck2Count">9</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Playing Area -->
+                <div class="playing-area">
+                    <div class="card-slot" id="dealerCardSlot">
+                        <div class="card-slot-label">Dealer's Card</div>
+                    </div>
+                    <div style="font-size: 20px;">VS</div>
+                    <div class="card-slot" id="contestantCardSlot">
+                        <div class="card-slot-label">contestant's Card</div>
+                    </div>
+                </div>
+
+                <!-- Betting Area -->
+                <div class="betting-area" id="bettingArea" style="display: none;">
+                    <div class="bet-section">
+                        <h3>BIG</h3>
+                        <p>contestant's card > Dealer's card</p>
+                        <input type="number" id="bigBetAmount" class="bet-input" min="1" placeholder="0">
+                        <br>
+                        <button onclick="placeBet('big')" class="bet-button" id="bigBetBtn">Bet Big</button>
+                    </div>
+                    <div class="bet-section">
+                        <h3>SMALL</h3>
+                        <p>contestant's card < Dealer's card</p>
+                        <input type="number" id="smallBetAmount" class="bet-input" min="1" placeholder="0">
+                        <br>
+                        <button onclick="placeBet('small')" class="bet-button" id="smallBetBtn">Bet Small</button>
+                    </div>
+                </div>
+
+                <!-- Player Areas -->
+                <div class="player-area">
+                    <div class="player" id="player1Area">
+                        <div class="player-info">
+                            <div class="player-name" id="player1Name">Player 1</div>
+                            <div class="chips" id="player1Chips">10 chips</div>
+                        </div>
+                        <div class="player-deck" id="player1Deck"></div>
+                    </div>
+                    <div class="player" id="player2Area">
+                        <div class="player-deck" id="player2Deck"></div>
+                        <div class="player-info">
+                            <div class="player-name" id="player2Name">Player 2</div>
+                            <div class="chips" id="player2Chips">10 chips</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls" id="gameControls" style="display: none;">
+        <button onclick="readyForNextRound()" class="btn success" id="readyBtn" style="display: none;">Ready for Next Round</button>
+        <button onclick="confirmResetGame()" class="btn danger" id="resetBtn">Reset Game</button>
+    </div>
+
+    <!-- Back Button -->
+    <button class="back-btn" onclick="goBack()">
+        ← Back
+    </button>
+
+    <!-- Modal for results and messages -->
+    <div id="modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div id="modalContent"></div>
+            <button onclick="closeModal()" class="btn">Close</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    
+    <script src="bigorsmall.js"></script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Games Completed - Piece Counter</title>
+    <link rel="stylesheet" href="games-styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Top Section - Games Library -->
+        <div class="top-section">
+            <div class="games-container">
+                <div class="game-box">
+                    <div class="piece-cost" data-cost="3">
+                      <img src="images/piecetoken.gif" width="12px" height="12px">
+                      <img src="images/piecetoken.gif" width="12px" height="12px">
+                      <img src="images/piecetoken.gif" width="12px" height="12px">
+                    </div>
+                    <img class="game-image" src="images/heels.webp" alt="wallgo">
+                    <div class="game-title">Heels for Pole</div>
+                </div>
+                <div class="game-box">
+                  <div class="piece-cost" data-cost="2">
+                    <img src="images/piecetoken.gif" width="12px" height="12px">
+                    <img src="images/piecetoken.gif" width="12px" height="12px">
+                  </div>
+                    <img class="game-image" src="images/matcha.jpg" alt="wallgo">
+                    <div class="game-title">Any free sweet drink at anytime coupon</div>
+                </div>
+                <div class="game-box">
+                  <div class="piece-cost" data-cost="5">
+                    <img src="images/piecetoken.gif" width="12px" height="12px">
+                    <img src="images/piecetoken.gif" width="12px" height="12px">
+                    <img src="images/piecetoken.gif" width="12px" height="12px">
+                    <img src="images/piecetoken.gif" width="12px" height="12px">
+                    <img src="images/piecetoken.gif" width="12px" height="12px">
+                  </div>
+                    <img class="game-image" src="images/makeup.jpg" alt="wallgo" >
+                    <div class="game-title">Any makeup/skincare item</div>
+                </div>
+                <div class="game-box">
+                  <div class="piece-cost" data-cost="9">
+                    <img src="images/piecetoken.gif" width="12px" height="12px">
+                    <img src="images/piecetoken.gif" width="12px" height="12px">
+                    <img src="images/piecetoken.gif" width="12px" height="12px">
+                    <img src="images/piecetoken.gif" width="12px" height="12px">
+                    <img src="images/piecetoken.gif" width="12px" height="12px">
+                    <img src="images/piecetoken.gif" width="12px" height="12px">
+                    <img src="images/piecetoken.gif" width="12px" height="12px">
+                    <img src="images/piecetoken.gif" width="12px" height="12px">
+                    <img src="images/piecetoken.gif" width="12px" height="12px">
+                  </div>
+                    <img class="game-image" src="images/cringe.png" alt="wallgo" >
+                    <div class="game-title">Video of me on the bus doing the "I miss you baby thing"</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Section - Piece Counter and Shopping Cart -->
+        <div class="bottom-section">
+            <div class="piece-counter-container">
+                <div class="counter-display">Pieces: <span id="pieceCount">0</span></div>
+                <div class="pieces-container" id="piecesContainer">
+                    <div class="empty-message"></div>
+                </div>
+            </div>
+            
+            <div class="shopping-cart">
+                <div class="cart-title">Shopping Cart 🛒</div>
+                <div class="cart-items" id="cartItems">
+                    <div class="empty-cart-message">No prizes selected</div>
+                </div>
+                <div class="cart-total" id="cartTotal">Total: 0</div>
+                <button class="checkout-btn" id="checkoutBtn" onclick="checkout()" disabled>
+                    Redeem Prizes
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Back Button -->
+    <button class="back-btn" onclick="goBack()">
+        ← Back
+    </button>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    
+    <script src="games-script.js"></script>
+</body>
+</html>
