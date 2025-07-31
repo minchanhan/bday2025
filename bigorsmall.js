@@ -339,7 +339,7 @@ const firebaseConfig = {
         if (gameState.contestantCard != null) {
             contestantSlot.innerHTML = `<div class="card">${gameState.contestantCard}</div><div class="card-slot-label">Contestant's Card</div>`;
         } else {
-            contestantSlot.innerHTML = `<div class="card">ERROR</div><div class="card-slot-label">Contestant's Card</div>`;
+            contestantSlot.innerHTML = `<div class="card">...</div><div class="card-slot-label">Contestant's Card</div>`;
         }
     } else if (gameState.gamePhase === 'betting' && gameState.contestantCard != null) {
         // Show contestant card face down during betting
