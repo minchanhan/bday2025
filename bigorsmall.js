@@ -440,7 +440,7 @@ function listenForGameUpdates() {
             <p><strong>Contestant Winnings:</strong> ${contestantWinnings} chips</p>
             <p><strong>Bet:</strong> ${bet.amount} chips on ${bet.type.toUpperCase()}</p>
             <p><strong>Bettor Result:</strong> ${bettorResult.toUpperCase()}</p>
-            <p><strong>Bettor Winnings:</strong> ${bettorWinnings} chips</p>
+            <p><strong>Bettor Winnings:</strong> ${bettorWinnings - bet.amount} chips</p>
         </div>
     `;
     
