@@ -87,18 +87,32 @@ const firebaseConfig = {
     });
   }
   
-  function listenForGameUpdates() {
+  let hasRevealed = false;
+
+function listenForGameUpdates() {
     database.ref(`games/${gameId}`).on('value', (snapshot) => {
         const data = snapshot.val();
         if (!data) return;
-  
+
         gameState = data.gameState || gameState;
         const players = data.players || {};
-  
+
         updateUI(players);
         handleGamePhase(players);
+
+        // ✅ NEW: trigger revealCards when entering 'reveal' phase
+        if (gameState.gamePhase === 'reveal' && !hasRevealed) {
+            hasRevealed = true;
+            revealCards();
+        }
+
+        // Reset flag if round ended or game reset
+        if (gameState.gamePhase !== 'reveal') {
+            hasRevealed = false;
+        }
     });
-  }
+}
+
   
   function updateUI(players) {
     // Update player info
@@ -289,34 +303,30 @@ const firebaseConfig = {
     if (gameState.gamePhase !== 'betting' || currentPlayer === `player${gameState.currentcontestant}`) {
         return;
     }
-  
+
     const betAmount = parseInt(document.getElementById(`${betType}BetAmount`).value);
     if (!betAmount || betAmount <= 0) {
         alert('Please enter a valid bet amount');
         return;
     }
-  
+
     database.ref(`games/${gameId}/players/${currentPlayer}`).once('value', (snapshot) => {
         const playerData = snapshot.val();
         if (betAmount > playerData.chips) {
             alert('Not enough chips!');
             return;
         }
-  
+
         gameState.bet = {
             player: currentPlayer,
             type: betType,
             amount: betAmount
         };
-  
+
         gameState.gamePhase = 'reveal';
-        updateGameState();
-        
-        setTimeout(() => {
-            revealCards();
-        }, 1000);
+        updateGameState(); // <- just this
     });
-  }
+}
   
   function updateCardSlots(players) {
     const dealerSlot = document.getElementById('dealerCardSlot');
